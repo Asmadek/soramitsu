@@ -1,16 +1,16 @@
 export enum Cryptocurrencies {
-  BTC = 'BTC',
-  DASH = 'DASH',
-  ETH = 'ETH',
-  LTC = 'LTC',
+  BTC = "BTC",
+  DASH = "DASH",
+  ETH = "ETH",
+  LTC = "LTC",
 }
 
 export enum Fiatcurrencies {
-  RUB = 'RUB',
-  USD = 'USD',
-  EUR = 'EUR',
-  JPY = 'JPY',
-  CNY = 'CNY',
+  RUB = "RUB",
+  USD = "USD",
+  EUR = "EUR",
+  JPY = "JPY",
+  CNY = "CNY",
 }
 
 export enum CurrencyType {
