@@ -1,16 +1,21 @@
 export enum Cryptocurrencies {
-  BTC,
-  DASH,
-  ETH,
-  LTC,
+  BTC = 'BTC',
+  DASH = 'DASH',
+  ETH = 'ETH',
+  LTC = 'LTC',
 }
 
 export enum Fiatcurrencies {
-  RUB,
-  USD,
-  EUR,
-  JPY,
-  CNY,
+  RUB = 'RUB',
+  USD = 'USD',
+  EUR = 'EUR',
+  JPY = 'JPY',
+  CNY = 'CNY',
+}
+
+export enum CurrencyType {
+  CRYPTO,
+  FIAT,
 }
 
 export type CurrencyName = Cryptocurrencies | Fiatcurrencies;
@@ -36,12 +41,5 @@ export interface HistoryData {
   ConversionType: {
     type: string;
     conversionSymbol: string;
-  }
-}
-
-export interface CurrencyPair {
-  from: CurrencyName;
-  to: CurrencyName;
-  price: number;
-  lastUpdate: number;
+  };
 }
