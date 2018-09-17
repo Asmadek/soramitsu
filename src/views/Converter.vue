@@ -77,14 +77,15 @@ import { Component, Vue } from "vue-property-decorator";
 import {
   Fiatcurrencies,
   Cryptocurrencies,
+  CurrencyType,
   HistoryData,
   HistoryDataItem,
-  CurrencyType,
   HistoryRanges,
-} from "../logic/classes";
-import { CurrencyDataAPI as API } from "../logic/api";
-import Chart from "../components/Chart";
-import { toDate } from "../logic/utils";
+} from "@/logic/classes";
+import { CurrencyDataAPI as API } from "@/logic/api";
+import { toDate } from "@/logic/utils";
+import Chart from "@/components/Chart";
+import { Actions } from "@/logic/store-constants";
 
 @Component({
   components: { Chart },
@@ -168,18 +169,18 @@ export default class Converter extends Vue {
   }
 
   onCurrencyChange(currency: string, currencyType: CurrencyType) {
-    this.$store.dispatch("setCurrency", {
+    this.$store.dispatch(Actions.SET_CURRENCY, {
       currency,
       currencyType,
     });
   }
 
   onTimeRangeChange(range: number) {
-    this.$store.dispatch("setTimeRange", range);
+    this.$store.dispatch(Actions.SET_TIME_RANGE, range);
   }
 
   onValueChange(value: number, currencyType: CurrencyType) {
-    this.$store.dispatch("setValue", { value, currencyType });
+    this.$store.dispatch(Actions.SET_VALUE, { value, currencyType });
   }
 }
 </script>

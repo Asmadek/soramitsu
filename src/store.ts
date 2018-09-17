@@ -1,8 +1,9 @@
 import Vue from "vue";
 import Vuex, { ActionTree, MutationTree, GetterTree } from "vuex";
-import { CurrencyDataAPI } from "./logic/api";
-import { CurrencyType, HistoryDataItem, HistoryData, HistoryRanges } from "./logic/classes";
-import { toDate } from "./logic/utils";
+import { CurrencyDataAPI } from "@/logic/api";
+import { CurrencyType, HistoryDataItem, HistoryData, HistoryRanges } from "@/logic/classes";
+import { toDate } from "@/logic/utils";
+import { Mutations, Actions } from "@/logic/store-constants";
 Vue.use(Vuex);
 
 interface State {
@@ -37,77 +38,79 @@ const getters: GetterTree<State, any> = {
 };
 
 const mutations: MutationTree<State> = {
-  setFromValue(state, value: number) {
+  [Mutations.SET_FROM_VALUE](state, value: number) {
     state.fromValue = value;
   },
-  setToValue(state, value: number) {
+  [Mutations.SET_TO_VALUE](state, value: number) {
     state.toValue = value;
   },
-  setFromCurrency(state, currency) {
+  [Mutations.SET_FROM_CURRENCY](state, currency) {
     state.fromCurrency = currency;
   },
-  setToCurrency(state, currency) {
+  [Mutations.SET_TO_CURRENCY](state, currency) {
     state.toCurrency = currency;
   },
-  setPrice(state, price) {
+  [Mutations.SET_PRICE](state, price) {
     state.price = price;
   },
-  setHistory(state, history) {
+  [Mutations.SET_HISTORY](state, history) {
     state.history = history;
   },
-  setLastDays(state, lastDays) {
+  [Mutations.SET_LAST_DAYS](state, lastDays) {
     state.lastDays = lastDays;
   },
-  setTimeRange(state, range) {
+  [Mutations.SET_TIME_RANGE](state, range) {
     state.timeRange = range;
   },
 };
 
 const actions: ActionTree<State, any> = {
-  setCurrency({ commit, dispatch, state }, payload: any) {
+  [Actions.SET_CURRENCY]({ commit, dispatch, state }, payload: any) {
     const mutationTitle =
-      payload.currencyType === CurrencyType.CRYPTO ? "setFromCurrency" : "setToCurrency";
+      payload.currencyType === CurrencyType.CRYPTO
+        ? Mutations.SET_FROM_CURRENCY
+        : Mutations.SET_TO_CURRENCY;
     commit(mutationTitle, payload.currency);
 
     if (!!state.fromCurrency && !!state.toCurrency) {
-      dispatch("updatePrice");
+      dispatch(Actions.UPDATE_PRICE);
     }
   },
 
-  setValue({ commit, state }, payload: any) {
+  [Actions.SET_VALUE]({ commit, state }, payload: any) {
     const value = parseInt(payload.value, 10);
 
     if (payload.currencyType === CurrencyType.CRYPTO) {
-      commit("setFromValue", value);
-      commit("setToValue", value * state.price);
+      commit(Mutations.SET_FROM_VALUE, value);
+      commit(Mutations.SET_TO_VALUE, value * state.price);
     } else {
-      commit("setFromValue", value / state.price);
-      commit("setToValue", value);
+      commit(Mutations.SET_FROM_VALUE, value / state.price);
+      commit(Mutations.SET_TO_VALUE, value);
     }
   },
 
-  setTimeRange({ commit, dispatch }, range) {
-    commit("setTimeRange", range);
-    dispatch("updateHistory");
+  [Actions.SET_TIME_RANGE]({ commit, dispatch }, range) {
+    commit(Mutations.SET_TIME_RANGE, range);
+    dispatch(Actions.UPDATE_HISTORY);
   },
 
-  updatePrice({ commit, dispatch, state }) {
+  [Actions.UPDATE_PRICE]({ commit, dispatch, state }) {
     CurrencyDataAPI.getPrice(state.fromCurrency, state.toCurrency).then(result => {
-      commit("setPrice", result[state.toCurrency]);
-      dispatch("updateLastDays");
-      dispatch("updateHistory");
+      commit(Mutations.SET_PRICE, result[state.toCurrency]);
+      dispatch(Actions.UPDATE_LAST_DAYS);
+      dispatch(Actions.UPDATE_HISTORY);
     });
   },
 
-  updateHistory({ commit, state }) {
+  [Actions.UPDATE_HISTORY]({ commit, state }) {
     CurrencyDataAPI.getHistory(state.fromCurrency, state.toCurrency, state.timeRange).then(
       (result: HistoryData) => {
-        commit("setHistory", result.Data);
+        commit(Mutations.SET_HISTORY, result.Data);
       },
     );
   },
 
-  updateLastDays({ commit, state }) {
+  [Actions.UPDATE_LAST_DAYS]({ commit, state }) {
     CurrencyDataAPI.getHistory(state.fromCurrency, state.toCurrency, 10).then(
       (result: HistoryData) => {
         const historyData = result.Data.reduce(
@@ -129,7 +132,7 @@ const actions: ActionTree<State, any> = {
         if (historyData.length > 0) {
           historyData.pop();
         }
-        commit("setLastDays", historyData);
+        commit(Mutations.SET_LAST_DAYS, historyData);
       },
     );
   },

@@ -8,5 +8,6 @@
         <router-view></router-view>
       </v-container>
     </v-content>
+    <v-footer app>&copy; 2018 Aleksandr Makhnev</v-footer>
   </v-app>
 </template>
