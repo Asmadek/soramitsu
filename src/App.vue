@@ -1,14 +1,12 @@
 <template>
   <v-app>
-    <v-navigation-drawer app></v-navigation-drawer>
-    <v-toolbar app>Supperrrr Converterrrr</v-toolbar>
+    <v-toolbar app>     
+      <v-toolbar-title>Converter App</v-toolbar-title>
+    </v-toolbar>
     <v-content>
-      <v-container fluid>
+      <v-container>
         <router-view></router-view>
       </v-container>
     </v-content>
   </v-app>
 </template>
-
-<style lang="scss">
-</style>

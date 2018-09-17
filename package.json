@@ -25,7 +25,6 @@
     "@vue/cli-plugin-babel": "^3.0.2",
     "@vue/cli-plugin-e2e-cypress": "^3.0.2",
     "@vue/cli-plugin-eslint": "^3.0.2",
-    "@vue/cli-plugin-pwa": "^3.0.2",
     "@vue/cli-plugin-typescript": "^3.0.2",
     "@vue/cli-plugin-unit-jest": "^3.0.2",
     "@vue/cli-service": "^3.0.2",

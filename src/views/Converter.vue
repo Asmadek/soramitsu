@@ -1,166 +1,192 @@
 <template>
   <div class="section">
     <div class="currencies">
-      <div class="currency-selection">
-                  <v-text-field
-            label="Regular" type="number" v-bind:value="valueFirst" @input="onFirstInput"
+      <h1 class="headline">Bidirectional currency converter</h1>
+      <v-layout row wrap>
+        <v-flex xs12 sm6 md3 class="pa-1">
+          <v-text-field 
+            label="Input amount to convert from" 
+            type="number" 
+            :value="fromValue" 
+            @input="onValueChange($event, CurrencyType.CRYPTO)"
           ></v-text-field>
-        <v-select
-          :items="fiat"
-          label="Standard"
-          @change="onChangeCurrency($event, 1)"
+        </v-flex>
+        <v-flex xs12 sm6 md3 class="pa-1">
+          <v-select 
+            :items="Crypto" 
+            label="Choose currency to convert from" 
+            @change="onCurrencyChange($event, CurrencyType.CRYPTO)"
+          ></v-select>
+        </v-flex>
+        <v-flex xs12 sm6 md3 class="pa-1">
+          <v-text-field 
+            label="Input amount to convert to" 
+            type="number" 
+            :value="toValue" 
+            @input="onValueChange($event, CurrencyType.FIAT)"
+          ></v-text-field>
+        </v-flex>
+        <v-flex xs12 sm6 md3 class="pa-1">
+          <v-select 
+            :items="Fiat" 
+            label="Choose currency to convert to" 
+            @change="onCurrencyChange($event, CurrencyType.FIAT)"
+          ></v-select>
+        </v-flex>
+      </v-layout>
 
-        ></v-select>
-      </div>
-      <div class="currency-selection">
-                  <v-text-field
-            label="Regular" type="number" v-bind:value="valueSecond" @input="onSecondInput"
-          ></v-text-field>
-        <v-select
-          :items="crypto"
-          label="Standard"
-          @change="onChangeCurrency($event, 2)"
-        ></v-select>
-      </div>
     </div>
-    <div class="history">
-      <div class="history-chart">
-        <div class="chart-controls">
-        </div>
-        <Chart :chartData="getData" :options="getOptions"></chart>
-      </div>
-      <ul class="history-items" v-if="getHistoryItems.length > 0">
-        <li class="history-item" v-for="historyItem in getHistoryItems">
-          {{historyItem.time}} - {{historyItem.close}} 
-        </li>
-      </ul>
+    <div class="history" v-if="lastDays.length > 0">
+      <v-layout row wrap>
+          <v-flex xs12 sm8 md9 class="pa-1 history-header">
+            <h2 class="headline">Course history for {{fromCurrency}} to {{toCurrency}}</h2>
+          </v-flex>
+          <v-flex xs12 sm4 md3 class="pa-1">
+            <v-select 
+              :items="HistoryRanges" 
+              item-text="text" 
+              item-value="value" 
+              label="Time range" 
+              :value="timeRange"
+              @change="onTimeRangeChange($event)"></v-select>
+          </v-flex>
+          <v-flex xs12>
+            <v-card class="pa-3">
+            <Chart :chartData="chartData" :options="options"></chart>
+            </v-card>
+          </v-flex>
+      </v-layout>
+      <v-layout row wrap>
+        <v-flex xs12>
+        <h2 class="headline my-3">Last 10 days course</h2>
+          <v-data-table :headers="headers" :items="lastDays" hide-actions class="elevation-1">
+            <template slot="items" slot-scope="props">
+              <td>{{ props.item.time * 1000 | toDate }}</td>
+              <td class="text-xs-right">{{ props.item.close }}</td>
+              <td class="text-xs-right">{{ props.item.change.toFixed(2) }}</td>
+            </template>
+          </v-data-table>
+        </v-flex>
+      </v-layout>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { Fiatcurrencies, Cryptocurrencies, HistoryData, HistoryDataItem } from "../logic/classes";
+import {
+  Fiatcurrencies,
+  Cryptocurrencies,
+  HistoryData,
+  HistoryDataItem,
+  CurrencyType,
+  HistoryRanges,
+} from "../logic/classes";
 import { CurrencyDataAPI as API } from "../logic/api";
 import Chart from "../components/Chart";
+import { toDate } from "../logic/utils";
 
 @Component({
   components: { Chart },
+  filters: {
+    toDate(value: number) {
+      return toDate(value);
+    },
+  },
 })
 export default class Converter extends Vue {
   constructor() {
     super();
   }
 
-  firstValue = 0;
-  price = 1;
-  secondValue = 0;
+  options = { responsive: true, maintainAspectRatio: false };
+  Fiat: Array<string> = Object.keys(Fiatcurrencies);
+  Crypto: Array<string> = Object.keys(Cryptocurrencies);
+  CurrencyType = CurrencyType;
+  HistoryRanges = HistoryRanges;
 
-  firstCurrency: string = "";
-  secondCurrency: string = "";
+  headers = [
+    {
+      text: "Date",
+      align: "left",
+      sortable: false,
+      value: "time",
+    },
+    {
+      text: "Course",
+      align: "right",
+      sortable: false,
+      value: "close",
+    },
+    {
+      text: "Change",
+      align: "right",
+      sortable: false,
+      value: "change",
+    },
+  ];
 
-  fiat: Array<string> = Object.keys(Fiatcurrencies);
-  crypto: Array<string> = Object.keys(Cryptocurrencies);
-
-  historyItems: Array<any> = [];
-  get getHistoryItems() {
-    return this.historyItems;
-  }
-  data = {
-    labels: ["January", "February", "March", "April", "May", "June", "July"],
-    datasets: [
-      {
-        label: "Data One",
-        backgroundColor: "#f87979",
-        data: [40, 39, 10, 40, 39, 80, 40],
-      },
-    ],
-  };
-
-  get getData() {
-    console.log(this.data);
-    return this.data;
-  }
-
-  get getOptions() {
-    return this.options;
+  get price() {
+    return this.$store.state.price;
   }
 
-  updateHistory() {
-    API.getHistory(this.firstCurrency, this.secondCurrency).then((result: HistoryData) => {
-      let labels: Array<string> = [];
-      let data: Array<number> = [];
-      let timeOptions = {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      };
+  get fromCurrency() {
+    return this.$store.state.fromCurrency;
+  }
 
-      result.Data.forEach(item => {
-        labels.push(new Date(item.time * 1000).toLocaleString("ru", timeOptions));
-        data.push(item.close);
-      });
+  get toCurrency() {
+    return this.$store.state.toCurrency;
+  }
 
-      let newData = { ...this.data };
+  get lastDays() {
+    return this.$store.state.lastDays;
+  }
 
-      newData.labels = labels;
-      newData.datasets[0].data = data;
-      this.historyItems = result.Data;
-      this.data = newData;
+  get timeRange() {
+    return this.$store.state.timeRange;
+  }
+
+  get chartData() {
+    return {
+      labels: this.$store.getters.historyLabels,
+      datasets: [
+        {
+          label: `${this.fromCurrency} to ${this.toCurrency}`,
+          backgroundColor: "#f87979",
+          data: this.$store.getters.historyValues,
+        },
+      ],
+    };
+  }
+
+  get fromValue() {
+    return this.$store.state.fromValue;
+  }
+
+  get toValue() {
+    return this.$store.state.toValue;
+  }
+
+  onCurrencyChange(currency: string, currencyType: CurrencyType) {
+    this.$store.dispatch("setCurrency", {
+      currency,
+      currencyType,
     });
   }
 
-  options = { responsive: true, maintainAspectRatio: false };
-  onChangeCurrency(value: string, currency: any) {
-    if (currency === 1) {
-      this.firstCurrency = value;
-    } else {
-      this.secondCurrency = value;
-    }
-
-    this.updatePrice(currency);
+  onTimeRangeChange(range: number) {
+    this.$store.dispatch("setTimeRange", range);
   }
 
-  updatePrice(currency: any) {
-    if (this.firstCurrency !== "" && this.secondCurrency !== "") {
-      API.getPrice(this.firstCurrency, this.secondCurrency).then((price: any) => {
-        this.price = price[this.secondCurrency];
-
-        if (currency === 1) {
-          this.updateFirst();
-        } else {
-          this.updateSecond();
-        }
-
-        this.updateHistory();
-      });
-    }
-  }
-
-  get valueFirst() {
-    return this.firstValue;
-  }
-
-  get valueSecond() {
-    return this.secondValue;
-  }
-
-  updateSecond() {
-    this.secondValue = this.firstValue * this.price;
-  }
-
-  updateFirst() {
-    this.firstValue = this.secondValue / this.price;
-  }
-
-  onFirstInput(value: number) {
-    this.firstValue = value;
-    this.updateSecond();
-  }
-
-  onSecondInput(value: number) {
-    this.secondValue = value;
-    this.updateFirst();
+  onValueChange(value: number, currencyType: CurrencyType) {
+    this.$store.dispatch("setValue", { value, currencyType });
   }
 }
 </script>
+
+<style lang="scss">
+.history-header {
+  display: flex;
+  align-items: center;
+}
+</style>
